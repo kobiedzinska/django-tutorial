@@ -44,7 +44,7 @@ ALLOWED_HOSTS = [
 
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.postgresql",
+        "ENGINE": "django.db.backends.mysql",
         "NAME": os.getenv("MARIA_DB", "wudadb"),
         "USER": os.getenv("MARIA_USER", "postgres"),
         "PASSWORD": os.getenv("MARIA_PASSWORD"),
