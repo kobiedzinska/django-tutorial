@@ -45,11 +45,11 @@ ALLOWED_HOSTS = [
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.getenv("POSTGRES_DB", "wudadb"),
-        "USER": os.getenv("POSTGRES_USER", "postgres"),
-        "PASSWORD": os.getenv("POSTGRES_PASSWORD"),
-        "HOST": os.getenv("POSTGRES_HOST", "localhost"),
-        "PORT": os.getenv("POSTGRES_PORT", "5432"),
+        "NAME": os.getenv("MARIA_DB", "wudadb"),
+        "USER": os.getenv("MARIA_USER", "postgres"),
+        "PASSWORD": os.getenv("MARIA_PASSWORD"),
+        "HOST": os.getenv("MARIA_HOST", "localhost"),
+        "PORT": os.getenv("MARIA_PORT", "41871"),
     }
 }
 
