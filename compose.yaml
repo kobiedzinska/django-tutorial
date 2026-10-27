@@ -1,0 +1,31 @@
+
+services:
+  db:
+    image: mariadb:10
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PSSWD}
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PSSWD}
+    volumes:
+      - mariadb_data:/var/lib/mariadb
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -u $${DB_USER} -p$${DB_PSSWD}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  web:
+    build: .
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  mariadb_data:
