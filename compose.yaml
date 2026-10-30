@@ -27,5 +27,16 @@ services:
       db:
         condition: service_healthy
 
+test:
+    build: .
+    restart: unless-stopped
+    env_file:
+      - .env
+    command: python manage.py test polls
+    depends_on:
+      db:
+        condition: service_healthy
+
+
 volumes:
   mariadb_data:
