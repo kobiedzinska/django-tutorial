@@ -10,7 +10,43 @@ jobs:
     steps:
         - name: Checkout code
           uses: actions/checkout@v6
+
         - name: Check Docker version
           run: docker --version
+
         - name: Check Docker Compose version
           run: docker compose version
+
+        - name: Create test environment file
+          run: |
+            cat > .env << EOF
+            DB_NAME=test_db
+            DB_USER=test_user
+            DB_PSSWD=test_password
+            DB_HOST=db
+            DB_PORT=5432
+            SECRET_KEY=django-insecure-ci-only-key
+            EOF
+
+        - name: Build and start app
+          run: docker compose up --build -d db web
+
+        - name: Check if it works
+          run: |
+            for i in {1..10}; do
+              if curl -f http://localhost:8000/; then
+                echo "U mnie dziala!"
+                exit 0
+              fi
+              echo "Waiting..."
+              sleep 3
+            done
+            echo "No response"
+            exit 1
+
+        - name: Build and run tests
+          run: docker compose run --build --rm test
+
+        - name: Stop containers
+          if: always()
+          run: docker compose down -v
