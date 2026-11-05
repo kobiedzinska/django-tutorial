@@ -1,0 +1,16 @@
+name: Django Tutorial CI/CD
+on:
+  push:
+    branches: [ test-githubActions ]
+  pull_request:
+    branches: [ test-githubActions ]
+jobs:
+  test: 
+    runs-on: ubuntu-latest
+    steps:
+        - name: Checkout code
+          uses: actions/checkout@v6
+        - name: Check Docker version
+          run: docker --version
+        - name: Check Docker Compose version
+          run: docker compose version
