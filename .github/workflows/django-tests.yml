@@ -1,9 +1,9 @@
 name: Django Tutorial CI/CD
 on:
   push:
-    branches: [ test-githubActions ]
+    branches: [ test-githubActions, master ]
   pull_request:
-    branches: [ test-githubActions ]
+    branches: [ test-githubActions, master ]
 jobs:
   test: 
     runs-on: ubuntu-latest
