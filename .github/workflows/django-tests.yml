@@ -5,58 +5,80 @@ on:
   pull_request:
     branches: [ test-githubActions, master ]
 jobs:
-  test: 
+  check_versions:
     runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Check Docker version
+        run: docker --version
+
+      - name: Check Docker Compose version
+        run: docker compose version
+
+  test:
+    needs: check_versions
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Create test environment file
+        run: |
+          cat > .env << EOF
+          DB_NAME=test_db
+          DB_USER=test_user
+          DB_PSSWD=test_password
+          DB_HOST=db
+          DB_PORT=5432
+          SECRET_KEY=django-insecure-ci-only-key
+          EOF
+
+      - name: Build and start app
+        run: docker compose up --build -d db web
+
+      - name: Check if it works
+        run: |
+          for i in {1..10}; do
+            if curl -f http://localhost:8000/; then
+              echo "U mnie dziala!"
+              exit 0
+            fi
+            echo "Waiting..."
+            sleep 3
+          done
+          echo "No response"
+          exit 1
+
+      - name: Build and run tests
+        run: docker compose run --build --rm test
+
+  login_ghcr:
+    needs: check_versions 
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+
     permissions:
       contents: read
       packages: write
+
     steps:
-        - name: Checkout code
-          uses: actions/checkout@v6
+      - name: Checkout code
+        uses: actions/checkout@v6
 
-        - name: Check Docker version
-          run: docker --version
+      - name: Login to GHCR
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-        - name: Check Docker Compose version
-          run: docker compose version
-
-        - name: Login to GHCR
-          uses: docker/login-action@v2
-          with:
-            registry: ghcr.io
-            username: ${{ github.actor }}
-            password: ${{ secrets.GITHUB_TOKEN }}
-
-        - name: Create test environment file
-          run: |
-            cat > .env << EOF
-            DB_NAME=test_db
-            DB_USER=test_user
-            DB_PSSWD=test_password
-            DB_HOST=db
-            DB_PORT=5432
-            SECRET_KEY=django-insecure-ci-only-key
-            EOF
-
-        - name: Build and start app
-          run: docker compose up --build -d db web
-
-        - name: Check if it works
-          run: |
-            for i in {1..10}; do
-              if curl -f http://localhost:8000/; then
-                echo "U mnie dziala!"
-                exit 0
-              fi
-              echo "Waiting..."
-              sleep 3
-            done
-            echo "No response"
-            exit 1
-
-        - name: Build and run tests
-          run: docker compose run --build --rm test
-
-        - name: Stop containers
-          if: always()
-          run: docker compose down -v
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository }}:latest
+            ghcr.io/${{ github.repository }}:${{ github.sha }}
